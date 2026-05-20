@@ -1,0 +1,16 @@
+{
+    "name": "yoto-contes",
+    "version": "1.0.0",
+    "description": "Generador de contes en català per a Yoto amb Gemini + Edge TTS",
+    "type": "module",
+    "main": "genera-conte.js",
+    "scripts": {
+      "conte": "node genera-conte.js",
+      "start": "node genera-conte.js"
+    },
+    "dependencies": {
+      "@andresaya/edge-tts": "^1.1.5",
+      "@google/generative-ai": "^0.24.0",
+      "dotenv": "^16.5.0"
+    }
+  }

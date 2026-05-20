@@ -1,0 +1,32 @@
+name: Conte Diari per a en Conor
+ 
+on:
+  schedule:
+    # Cada dia a les 6:00 AM (hora espanyola = 5:00 UTC a l'estiu)
+    - cron: '0 5 * * *'
+  workflow_dispatch: # permet executar-lo manualment des de GitHub
+ 
+jobs:
+  genera-conte:
+    runs-on: ubuntu-latest
+ 
+    steps:
+      - name: Descarregar el codi
+        uses: actions/checkout@v4
+ 
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+ 
+      - name: Instal·lar dependències
+        run: npm install
+ 
+      - name: Generar i pujar el conte
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          YOTO_CLIENT_ID: ${{ secrets.YOTO_CLIENT_ID }}
+          YOTO_TOKENS: ${{ secrets.YOTO_TOKENS }}
+        run: node genera-conte.js
+ 
