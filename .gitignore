@@ -1,0 +1,4 @@
+.env
+.yoto-tokens.json
+node_modules/
+contes/

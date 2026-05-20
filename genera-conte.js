@@ -150,16 +150,14 @@ async function main() {
     if (puja) {
       const accessToken = await obtenirAccessToken(process.env.YOTO_CLIENT_ID);
 
-      console.log("\n📤 Pujant versió catalana...");
-      await pujaAYoto({ fitxerMp3: fitxerCA, titol: contes.ca.titol, accessToken });
-
-      console.log("📤 Pujant versió anglesa...");
-      await pujaAYoto({ fitxerMp3: fitxerEN, titol: contes.en.titol, accessToken });
-
-      console.log(`\n🎉 Tots dos contes pujats a Yoto!`);
-      console.log(`   📗 ${contes.ca.titol}`);
-      console.log(`   📘 ${contes.en.titol}`);
-      console.log(`\n💡 Vincula cada playlist a una carta MYO des de l'app Yoto.\n`);
+      const ara = new Date();
+      const titol = `Clara i Conor — ${ara.toLocaleDateString("ca-ES")}`;
+      const result = await pujaAYoto({ fitxerCA, fitxerEN, titol, accessToken });
+      console.log(`\n🎉 Playlist pujada a Yoto!`);
+      console.log(`   📋 ${titol}`);
+      console.log(`   Capítol 1: Català`);
+      console.log(`   Capítol 2: English`);
+      console.log(`\n💡 Vincula la playlist a una carta MYO des de l'app Yoto.\n`);
     } else {
       console.log(`\n🎉 Llest!`);
       console.log(`   📗 Català: ${fitxerCA}`);

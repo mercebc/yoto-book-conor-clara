@@ -65,7 +65,7 @@ async function login(clientId) {
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
       client_id: clientId,
-      scope: "family:library:view family:library:edit offline_access",
+      scope: "user:content:manage family:library:manage offline_access",
       audience: "https://api.yotoplay.com",
     }),
   });
