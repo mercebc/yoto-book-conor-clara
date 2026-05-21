@@ -36,7 +36,7 @@ function applyPhoneticOverrides(text, voice) {
 async function synthesizeEdge(text, voice, outputBase, rate) {
   const { EdgeTTS } = await import("@andresaya/edge-tts");
   const tts = new EdgeTTS();
-  await tts.synthesize(applyPhoneticOverrides(text, voice), voice, { rate: rate || "+20%" });
+  await tts.synthesize(applyPhoneticOverrides(text, voice), voice, { rate: rate || "+1%" });
   await tts.toFile(outputBase);
   return `${outputBase}.mp3`;
 }

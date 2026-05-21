@@ -45,12 +45,12 @@ const LLENGUES = [
     veuEnv: "TTS_VOICE_CA",
     veuDefault: "ca-ES-JoanaNeural",
     prompt: (nom, personatges, lloc, situacio) =>
-      `Escriu un conte curt en català per a en ${nom}, que té 3 anys.
+      `Escriu un conte curt en mallorqui per a en ${nom}, que té 3 anys.
 Els protagonistes són na ${personatges[0]} i en ${personatges[1]}.
 El lloc és: ${lloc}. La situació és: ${situacio}.
 Normes:
 - NOMÉS el text del conte, sense títol ni explicacions
-- Frases curtes amb ritme i rima ocasional, estil Julia Donaldson
+- Rima ocasional, estil Julia Donaldson
 - Onomatopeies escrites directament (CATXOF, SPLASH, PUM), mai entre asteriscs
 - To càlid i divertit. Final feliç
 - ~250-300 paraules. Vocabulari per a 3 anys`,
@@ -86,7 +86,7 @@ const nomFitxer = (codi) => {
 
 async function generaContes() {
   const model = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
-    .getGenerativeModel({ model: process.env.LLM_MODEL || "gemini-2.0-flash" });
+    .getGenerativeModel({ model: process.env.LLM_MODEL || "gemini-2.5-flash" });
 
   const lloc = aleatori(LLOCS);
   const situacio = aleatori(SITUACIONS);
