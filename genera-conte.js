@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
-import { textToSpeech } from "./tts.js";
+import { textToSpeech } from "./text-to-speech.js";
 import { obtenirAccessToken } from "./yoto-auth.js";
 import { pujaAYoto } from "./yoto-upload.js";
 
