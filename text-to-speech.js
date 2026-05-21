@@ -1,25 +1,17 @@
 /**
  * TTS Provider abstraction
  *
- * Supports any provider via .env:
- *   TTS_PROVIDER=edge          (default, free)
- *   TTS_PROVIDER=elevenlabs    (best quality, paid)
- *   TTS_PROVIDER=openai        (good quality, paid)
+ * TTS_PROVIDER=edge          (default, free)
+ * TTS_PROVIDER=elevenlabs    (best quality, paid)
+ * TTS_PROVIDER=openai        (good quality, paid)
  *
- * Voice config per language:
- *   TTS_VOICE_CA=ca-ES-JoanaNeural        (Catalan voice)
- *   TTS_VOICE_EN=en-IE-ConnorNeural       (English voice)
- *   TTS_RATE=+20%                         (speed, edge only)
+ * TTS_VOICE_CA=ca-ES-JoanaNeural
+ * TTS_VOICE_EN=en-IE-ConnorNeural
+ * TTS_RATE=+20%                      (edge only)
  *
- * ElevenLabs extra:
- *   ELEVENLABS_API_KEY=...
- *   TTS_VOICE_CA=<voice_id>
- *   TTS_VOICE_EN=<voice_id>
- *
- * OpenAI extra:
- *   OPENAI_API_KEY=...
- *   TTS_VOICE_CA=nova          (alloy, echo, fable, onyx, nova, shimmer)
- *   TTS_VOICE_EN=onyx
+ * ElevenLabs: ELEVENLABS_API_KEY + TTS_VOICE_CA/EN = voice_id
+ * OpenAI:     OPENAI_API_KEY + TTS_VOICE_CA/EN = alloy|echo|fable|onyx|nova|shimmer
+ *             TTS_OPENAI_INSTRUCTIONS = custom voice style instructions
  */
 
 import fs from "fs";
@@ -27,10 +19,24 @@ import path from "path";
 
 // ─── Edge TTS (free, Microsoft) ───────────────────────────────────────────────
 
-async function synthesizeEdge(text, voice, outputBase) {
+// Phonetic overrides per voice — only needed when the TTS mispronounces names
+const PHONETIC_OVERRIDES = {
+  "ca-ES-JoanaNeural": { "Conor": "Kóónórr", "Clara": "Clara" },
+};
+
+function applyPhoneticOverrides(text, voice) {
+  const overrides = PHONETIC_OVERRIDES[voice];
+  if (!overrides) return text;
+  return Object.entries(overrides).reduce(
+    (t, [name, phonetic]) => t.replaceAll(name, phonetic),
+    text
+  );
+}
+
+async function synthesizeEdge(text, voice, outputBase, rate) {
   const { EdgeTTS } = await import("@andresaya/edge-tts");
   const tts = new EdgeTTS();
-  await tts.synthesize(text, voice);
+  await tts.synthesize(applyPhoneticOverrides(text, voice), voice, { rate: rate || "+20%" });
   await tts.toFile(outputBase);
   return `${outputBase}.mp3`;
 }
@@ -58,18 +64,18 @@ async function synthesizeElevenLabs(text, voice, outputPath) {
     }
   );
 
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`ElevenLabs error: ${err}`);
-  }
+  if (!res.ok) throw new Error(`ElevenLabs error: ${await res.text()}`);
 
   const mp3Path = `${outputPath}.mp3`;
-  const buffer = Buffer.from(await res.arrayBuffer());
-  fs.writeFileSync(mp3Path, buffer);
+  fs.writeFileSync(mp3Path, Buffer.from(await res.arrayBuffer()));
   return mp3Path;
 }
 
 // ─── OpenAI TTS ───────────────────────────────────────────────────────────────
+
+const DEFAULT_INSTRUCTIONS = `Voice: Warm, gentle, and playful, with a soft and soothing cadence perfect for young children.
+Phrasing: Short, clear sentences with natural pauses to allow the child to follow along.
+Tone: Friendly, magical, and reassuring, evoking wonder and comfort.`;
 
 async function synthesizeOpenAI(text, voice, outputPath) {
   const apiKey = process.env.OPENAI_API_KEY;
@@ -82,21 +88,18 @@ async function synthesizeOpenAI(text, voice, outputPath) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "tts-1",
+      model: "gpt-4o-mini-tts",
       input: text,
       voice: voice || "nova",
+      instructions: process.env.TTS_OPENAI_INSTRUCTIONS || DEFAULT_INSTRUCTIONS,
       response_format: "mp3",
     }),
   });
 
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`OpenAI TTS error: ${err}`);
-  }
+  if (!res.ok) throw new Error(`OpenAI TTS error: ${await res.text()}`);
 
   const mp3Path = `${outputPath}.mp3`;
-  const buffer = Buffer.from(await res.arrayBuffer());
-  fs.writeFileSync(mp3Path, buffer);
+  fs.writeFileSync(mp3Path, Buffer.from(await res.arrayBuffer()));
   return mp3Path;
 }
 
@@ -104,24 +107,21 @@ async function synthesizeOpenAI(text, voice, outputPath) {
 
 export async function textToSpeech({ text, voice, outputBase }) {
   const provider = (process.env.TTS_PROVIDER || "edge").toLowerCase();
+  const rate = process.env.TTS_RATE || "+20%";
 
   const dir = path.dirname(outputBase);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 
-  let outputPath;
-  switch (provider) {
-    case "elevenlabs":
-      outputPath = await synthesizeElevenLabs(text, voice, outputBase);
-      break;
-    case "openai":
-      outputPath = await synthesizeOpenAI(text, voice, outputBase);
-      break;
-    case "edge":
-    default:
-      outputPath = await synthesizeEdge(text, voice, outputBase);
-      break;
-  }
+  const synthesizers = {
+    edge: () => synthesizeEdge(text, voice, outputBase, rate),
+    elevenlabs: () => synthesizeElevenLabs(text, voice, outputBase),
+    openai: () => synthesizeOpenAI(text, voice, outputBase),
+  };
 
+  const synthesize = synthesizers[provider];
+  if (!synthesize) throw new Error(`Unknown TTS_PROVIDER: ${provider}`);
+
+  const outputPath = await synthesize();
   const mida = (fs.statSync(outputPath).size / 1024).toFixed(1);
   console.log(`   ✅ ${path.basename(outputPath)} (${mida} KB) [${provider}]`);
   return outputPath;

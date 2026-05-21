@@ -48,20 +48,28 @@ const LLENGUES = [
       `Escriu un conte curt en català per a en ${nom}, que té 3 anys.
 Els protagonistes són na ${personatges[0]} i en ${personatges[1]}.
 El lloc és: ${lloc}. La situació és: ${situacio}.
-Normes: NOMÉS el text del conte, sense títol ni explicacions. Frases molt curtes (màxim 10 paraules).
-To càlid i divertit. Final feliç. ~250-300 paraules. Vocabulari per a 3 anys. Pots afegir onomatopeies.`,
+Normes:
+- NOMÉS el text del conte, sense títol ni explicacions
+- Frases curtes amb ritme i rima ocasional, estil Julia Donaldson
+- Onomatopeies escrites directament (CATXOF, SPLASH, PUM), mai entre asteriscs
+- To càlid i divertit. Final feliç
+- ~250-300 paraules. Vocabulari per a 3 anys`,
   },
   {
     codi: "en",
     label: "English",
     veuEnv: "TTS_VOICE_EN",
-    veuDefault: "en-IE-ConnorNeural",
+    veuDefault: "en-IE-EmilyNeural",
     prompt: (nom, personatges, lloc, situacio) =>
       `Write a short story in English for ${nom}, who is 3 years old.
 The protagonists are ${personatges[0]} and ${personatges[1]}.
 The setting is: ${lloc}. The situation is: ${situacio}.
-Rules: ONLY the story text, no title or explanations. Very short sentences (max 10 words).
-Warm and fun tone. Happy ending. ~250-300 words. Vocabulary for a 3-year-old. You can add sound effects.`,
+Rules:
+- ONLY the story text, no title or explanations
+- Write in the style of Julia Donaldson: bouncy rhythm, rhyming couplets, repetition, and a sense of momentum
+- Sound words written directly (SPLASH, BOOM, WHOOSH), never in asterisks or brackets
+- Warm and fun tone. Happy ending
+- ~250-300 words. Vocabulary for a 3-year-old`,
   },
 ];
 
@@ -78,7 +86,7 @@ const nomFitxer = (codi) => {
 
 async function generaContes() {
   const model = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
-    .getGenerativeModel({ model: process.env.LLM_MODEL || "gemini-2.5-flash" });
+    .getGenerativeModel({ model: process.env.LLM_MODEL || "gemini-2.0-flash" });
 
   const lloc = aleatori(LLOCS);
   const situacio = aleatori(SITUACIONS);
